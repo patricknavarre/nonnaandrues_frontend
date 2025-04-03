@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+  <circle cx="250" cy="250" r="240" fill="white" stroke="black" stroke-width="10"/>
+  <circle cx="250" cy="250" r="180" fill="black"/>
+  
+  <!-- NR Logo in center -->
+  <text x="250" y="270" font-family="Arial, sans-serif" font-size="120" font-weight="bold" fill="white" text-anchor="middle">N&amp;R</text>
+  
+  <!-- Text around the circle -->
+  <path id="top-circle-text" d="M 250,75 a 175,175 0 0,1 0,350" fill="none"/>
+  <path id="bottom-circle-text" d="M 250,425 a 175,175 0 0,1 0,-350" fill="none"/>
+  
+  <text font-family="Arial, sans-serif" font-size="32" font-weight="bold" letter-spacing="2">
+    <textPath href="#top-circle-text" startOffset="50%" text-anchor="middle">NONNA &amp; RUE'S</textPath>
+  </text>
+  <text font-family="Arial, sans-serif" font-size="32" font-weight="bold" letter-spacing="2">
+    <textPath href="#bottom-circle-text" startOffset="50%" text-anchor="middle">UNIQUE FINDS</textPath>
+  </text>
+  
+  <!-- Dots between text sections -->
+  <circle cx="75" cy="250" r="6" fill="black"/>
+  <circle cx="425" cy="250" r="6" fill="black"/>
+</svg> 
