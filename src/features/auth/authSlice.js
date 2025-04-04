@@ -3,34 +3,55 @@ import axios from "axios";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:6041/api";
 
+// Admin credentials from .env
+const ADMIN_USERNAME = process.env.REACT_APP_ADMIN_USERNAME;
+const ADMIN_PASSWORD = process.env.REACT_APP_ADMIN_PASSWORD;
+
 // Get admin from localStorage
 const user = localStorage.getItem("user")
   ? JSON.parse(localStorage.getItem("user"))
   : null;
 const token = localStorage.getItem("token");
 
-// Login admin
+// Login admin using hardcoded credentials
 export const login = createAsyncThunk(
   "auth/login",
   async (userData, { rejectWithValue }) => {
     try {
       console.log("Attempting admin login with:", userData.email);
-      const response = await axios.post(`${API_URL}/users/login`, userData);
 
-      // Verify this is an admin account
-      if (response.data.success && response.data.user.role === "admin") {
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-        localStorage.setItem("token", response.data.token);
-        return response.data;
-      } else if (response.data.success) {
-        // If login succeeded but user is not admin
-        return rejectWithValue("Access denied. Admin privileges required.");
+      // Check against hardcoded credentials
+      if (
+        userData.email === ADMIN_USERNAME &&
+        userData.password === ADMIN_PASSWORD
+      ) {
+        // Create a mock admin user and token
+        const adminUser = {
+          _id: "admin-user",
+          name: "Admin User",
+          email: userData.email,
+          role: "admin",
+        };
+
+        // Generate a simple token (in a real app, you'd use JWT or similar)
+        const mockToken = btoa(`${adminUser.email}:${Date.now()}`);
+
+        // Store in localStorage
+        localStorage.setItem("user", JSON.stringify(adminUser));
+        localStorage.setItem("token", mockToken);
+
+        return {
+          success: true,
+          user: adminUser,
+          token: mockToken,
+        };
       }
 
-      return response.data;
+      // If credentials don't match
+      return rejectWithValue("Invalid email or password");
     } catch (error) {
-      console.error("Login error:", error.response?.data || error.message);
-      return rejectWithValue(error.response?.data?.message || "Login failed");
+      console.error("Login error:", error.message);
+      return rejectWithValue("Login failed. Please try again.");
     }
   }
 );
@@ -41,72 +62,54 @@ export const logout = createAsyncThunk("auth/logout", async () => {
   localStorage.removeItem("token");
 });
 
-// Get admin profile
+// Get admin profile (simplified to just return the stored user)
 export const getUserProfile = createAsyncThunk(
   "auth/getUserProfile",
   async (_, { rejectWithValue, getState }) => {
     try {
       const { auth } = getState();
 
-      const config = {
-        headers: {
-          Authorization: `Bearer ${auth.token}`,
-        },
-      };
-
-      const response = await axios.get(`${API_URL}/users/profile`, config);
-
-      // Verify this is still an admin account
-      if (response.data.success && response.data.user.role !== "admin") {
+      if (!auth.user || auth.user.role !== "admin") {
         return rejectWithValue("Access denied. Admin privileges required.");
       }
 
-      return response.data;
+      return {
+        success: true,
+        user: auth.user,
+      };
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to get profile"
-      );
+      return rejectWithValue("Failed to get profile");
     }
   }
 );
 
-// Update admin profile
+// Update admin profile (simplified)
 export const updateUserProfile = createAsyncThunk(
   "auth/updateUserProfile",
   async (userData, { rejectWithValue, getState }) => {
     try {
       const { auth } = getState();
 
-      const config = {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${auth.token}`,
-        },
-      };
-
-      const response = await axios.put(
-        `${API_URL}/users/profile`,
-        userData,
-        config
-      );
-
-      // Verify this is still an admin account
-      if (response.data.success && response.data.user.role !== "admin") {
+      if (!auth.user || auth.user.role !== "admin") {
         return rejectWithValue("Access denied. Admin privileges required.");
       }
 
-      if (response.data.success) {
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-        if (response.data.token) {
-          localStorage.setItem("token", response.data.token);
-        }
-      }
+      // Update the user object with new data
+      const updatedUser = {
+        ...auth.user,
+        name: userData.name || auth.user.name,
+        email: userData.email || auth.user.email,
+      };
 
-      return response.data;
+      // Store in localStorage
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+
+      return {
+        success: true,
+        user: updatedUser,
+      };
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to update profile"
-      );
+      return rejectWithValue("Failed to update profile");
     }
   }
 );
@@ -183,9 +186,6 @@ const authSlice = createSlice({
         state.loading = false;
         state.user = action.payload.user;
         state.isAdmin = action.payload.user.role === "admin";
-        if (action.payload.token) {
-          state.token = action.payload.token;
-        }
         state.success = true;
       })
       .addCase(updateUserProfile.rejected, (state, action) => {

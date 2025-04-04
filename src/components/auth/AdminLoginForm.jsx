@@ -150,6 +150,17 @@ const AdminLoginForm = () => {
           <a href="/" className="text-sm text-southern-green hover:underline">
             Return to Homepage
           </a>
+
+          {/* Development hint - remove in production */}
+          {process.env.NODE_ENV === "development" && (
+            <div className="mt-4 p-3 bg-gray-100 rounded-md text-sm text-gray-600">
+              <p>
+                <strong>Development Hint:</strong>
+              </p>
+              <p>Admin Email: {process.env.REACT_APP_ADMIN_USERNAME}</p>
+              <p>Admin Password: {process.env.REACT_APP_ADMIN_PASSWORD}</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
