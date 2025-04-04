@@ -1,8 +1,16 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { X } from "lucide-react";
+import { X, LogOut } from "lucide-react";
 
-const MobileMenu = ({ isOpen, onClose, navigation, siteName }) => {
+const MobileMenu = ({
+  isOpen,
+  onClose,
+  navigation,
+  siteName,
+  isAuthenticated,
+  isAdmin,
+  onLogout,
+}) => {
   // Prevent scrolling when menu is open
   useEffect(() => {
     if (isOpen) {
@@ -36,54 +44,58 @@ const MobileMenu = ({ isOpen, onClose, navigation, siteName }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-white bg-opacity-95 flex flex-col overflow-hidden">
-      <div className="p-4 flex justify-between items-center border-b border-southern-beige">
-        <h2 className="text-xl font-heading font-semibold text-southern-brown">
-          {siteName}
-        </h2>
-        <button
-          onClick={onClose}
-          className="p-1 text-southern-brown"
-          aria-label="Close menu"
-        >
-          <X size={24} />
-        </button>
-      </div>
-
-      <nav className="flex-1 p-6 space-y-6">
-        {navigation.map((item) => (
-          <Link
-            key={item.name}
-            to={item.href}
-            className="block text-xl font-medium text-gray-700 hover:text-southern-brown transition-colors"
+    <div className="fixed inset-0 z-50 bg-white overflow-y-auto">
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-2xl font-heading font-bold text-southern-brown">
+            {siteName}
+          </h2>
+          <button
             onClick={onClose}
+            className="p-2 text-southern-brown"
+            aria-label="Close menu"
           >
-            {item.name}
-          </Link>
-        ))}
-
-        <div className="border-t border-southern-beige pt-6 space-y-6">
-          <Link
-            to="/login"
-            className="block text-xl font-medium text-gray-700 hover:text-southern-brown transition-colors"
-            onClick={onClose}
-          >
-            Sign In
-          </Link>
-          <Link
-            to="/register"
-            className="block text-xl font-medium text-gray-700 hover:text-southern-brown transition-colors"
-            onClick={onClose}
-          >
-            Create Account
-          </Link>
+            <X size={24} />
+          </button>
         </div>
-      </nav>
 
-      <div className="p-6 border-t border-southern-beige">
-        <Link to="/cart" className="btn btn-primary w-full" onClick={onClose}>
-          View Cart
-        </Link>
+        <nav className="space-y-6">
+          {navigation.map((item) => (
+            <Link
+              key={item.name}
+              to={item.href}
+              className="block py-2 text-xl font-medium text-southern-brown hover:text-southern-green transition-colors"
+              onClick={onClose}
+            >
+              {item.name}
+            </Link>
+          ))}
+
+          {/* Admin section - only visible when admin is logged in */}
+          {isAuthenticated && isAdmin && (
+            <div className="pt-6 border-t border-gray-200">
+              <div className="space-y-4">
+                <Link
+                  to="/admin"
+                  className="block py-2 text-lg font-medium text-southern-brown hover:text-southern-green transition-colors"
+                  onClick={onClose}
+                >
+                  Admin Dashboard
+                </Link>
+                <button
+                  onClick={() => {
+                    onLogout();
+                    onClose();
+                  }}
+                  className="flex items-center py-2 text-lg font-medium text-southern-brown hover:text-southern-green transition-colors"
+                >
+                  <LogOut size={20} className="mr-2" />
+                  Sign Out
+                </button>
+              </div>
+            </div>
+          )}
+        </nav>
       </div>
     </div>
   );

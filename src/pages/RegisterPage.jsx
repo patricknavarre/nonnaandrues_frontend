@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { register } from "../slices/authSlice";
+import { register, resetAuthStatus } from "../features/auth/authSlice";
 import { toast } from "react-hot-toast";
 import { Eye, EyeOff, ChevronRight } from "lucide-react";
 
@@ -20,16 +20,34 @@ const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
 
-  const { userInfo, loading, error } = useSelector((state) => state.auth);
+  const { user, isAuthenticated, loading, error } = useSelector(
+    (state) => state.auth
+  );
 
   const redirect = location.search ? location.search.split("=")[1] : "/";
 
   useEffect(() => {
     // If user is already logged in, redirect
-    if (userInfo) {
+    if (isAuthenticated) {
       navigate(redirect);
     }
-  }, [navigate, userInfo, redirect]);
+  }, [navigate, isAuthenticated, redirect]);
+
+  useEffect(() => {
+    console.log("Register page mounted. Auth state:", {
+      isAuthenticated,
+      user,
+      error,
+      success,
+    });
+    // Clear any existing errors when mounting the component
+    dispatch(resetAuthStatus());
+
+    // Cleanup function to ensure errors are reset when unmounting
+    return () => {
+      dispatch(resetAuthStatus());
+    };
+  }, []); // Only run on mount and unmount
 
   useEffect(() => {
     // Show error toast if registration fails

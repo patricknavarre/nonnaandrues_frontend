@@ -14,8 +14,6 @@ import ProductDetailPage from "./pages/ProductDetailPage";
 import CartPage from "./pages/CartPage";
 import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
 // Admin Pages
@@ -25,7 +23,6 @@ import AdminAppearance from "./pages/admin/AdminAppearance";
 import AdminSettings from "./pages/admin/AdminSettings";
 
 // Auth components
-import PrivateRoute from "./components/auth/PrivateRoute";
 import AdminRoute from "./components/auth/AdminRoute";
 
 const App = () => {
@@ -46,8 +43,6 @@ const App = () => {
         <Route path="cart" element={<CartPage />} />
         <Route path="about" element={<AboutPage />} />
         <Route path="contact" element={<ContactPage />} />
-        <Route path="login" element={<LoginPage />} />
-        <Route path="register" element={<RegisterPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
 

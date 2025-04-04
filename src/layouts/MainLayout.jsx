@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { ShoppingBag, Menu, User, Search } from "lucide-react";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  ShoppingBag,
+  Menu,
+  User,
+  Search,
+  LogOut,
+  ChevronDown,
+} from "lucide-react";
+import { logout } from "../features/auth/authSlice";
 
 // Components
 import Footer from "../components/layout/Footer";
@@ -11,8 +19,10 @@ const MainLayout = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const dispatch = useDispatch();
   const { config = {} } = useSelector((state) => state.site || {});
   const { items = [] } = useSelector((state) => state.cart || {});
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
 
   // Handle scroll for sticky header
   useEffect(() => {
@@ -41,6 +51,10 @@ const MainLayout = () => {
     siteName: "Nonna & Rue's",
     logo: {},
     ...config,
+  };
+
+  const handleLogout = () => {
+    dispatch(logout());
   };
 
   return (
@@ -93,6 +107,20 @@ const MainLayout = () => {
                 {item.name}
               </Link>
             ))}
+
+            {/* Admin link if user is admin */}
+            {isAuthenticated && user && user.role === "admin" && (
+              <Link
+                to="/admin"
+                className={`text-sm font-medium ${
+                  location.pathname.startsWith("/admin")
+                    ? "text-southern-brown border-b-2 border-southern-brown"
+                    : "text-gray-700 hover:text-southern-brown hover:border-b-2 hover:border-southern-brown"
+                } transition-colors duration-200`}
+              >
+                Admin
+              </Link>
+            )}
           </nav>
 
           {/* Right navigation - Search, Account, Cart */}
@@ -105,13 +133,33 @@ const MainLayout = () => {
               <Search size={20} />
             </Link>
 
-            <Link
-              to="/login"
-              className="p-1 text-gray-700 hover:text-southern-brown transition-colors"
-              aria-label="Account"
-            >
-              <User size={20} />
-            </Link>
+            {/* Admin Access - Only shown when logged in */}
+            {isAuthenticated && user?.role === "admin" && (
+              <div className="relative group">
+                <button className="flex items-center space-x-1 text-southern-brown hover:text-southern-green">
+                  <User className="h-5 w-5" />
+                  <span className="hidden md:inline">Admin</span>
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-southern shadow-lg py-2 z-50 hidden group-hover:block">
+                  <Link
+                    to="/admin"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-southern-green/10 hover:text-southern-green"
+                  >
+                    Admin Dashboard
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-southern-green/10 hover:text-southern-green"
+                  >
+                    <div className="flex items-center">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Log Out
+                    </div>
+                  </button>
+                </div>
+              </div>
+            )}
 
             <Link
               to="/cart"
@@ -135,6 +183,9 @@ const MainLayout = () => {
         onClose={() => setIsMobileMenuOpen(false)}
         navigation={navigation}
         siteName={safeConfig.siteName}
+        isAuthenticated={isAuthenticated}
+        isAdmin={user?.role === "admin"}
+        onLogout={handleLogout}
       />
 
       {/* Main Content */}

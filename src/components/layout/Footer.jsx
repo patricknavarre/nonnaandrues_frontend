@@ -26,15 +26,6 @@ const Footer = ({ config }) => {
         { text: "Return Policy", url: "/returns" },
       ],
     },
-    {
-      title: "Account",
-      links: [
-        { text: "Sign In", url: "/login" },
-        { text: "Register", url: "/register" },
-        { text: "Order Tracking", url: "/orders" },
-        { text: "Wishlist", url: "/wishlist" },
-      ],
-    },
   ];
 
   const footerColumns =

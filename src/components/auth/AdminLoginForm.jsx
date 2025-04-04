@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { login, resetAuthStatus } from "../features/auth/authSlice";
+import { login, resetAuthStatus } from "../../features/auth/authSlice";
 import { toast } from "react-hot-toast";
-import { Eye, EyeOff, ChevronRight } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 
-const LoginPage = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
+const AdminLoginForm = () => {
   const dispatch = useDispatch();
 
   const [formData, setFormData] = useState({
@@ -17,52 +14,29 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
-  const { user, isAuthenticated, loading, error, success } = useSelector(
-    (state) => state.auth
-  );
-
-  const redirect = location.search ? location.search.split("=")[1] : "/admin";
+  const { loading, error, success } = useSelector((state) => state.auth);
 
   // Reset auth status when component mounts
   useEffect(() => {
-    console.log("Login page mounted. Auth state:", {
-      isAuthenticated,
-      user,
-      error,
-      success,
-    });
-    // Make sure to clear any existing errors when mounting the component
     dispatch(resetAuthStatus());
-
-    // Cleanup function to ensure errors are reset when unmounting
     return () => {
       dispatch(resetAuthStatus());
     };
-  }, []); // Only run on mount and unmount
-
-  useEffect(() => {
-    // If user is already logged in as admin, redirect
-    if (isAuthenticated && user && user.role === "admin") {
-      console.log("Admin is authenticated. Redirecting to:", redirect);
-      navigate(redirect);
-    }
-  }, [navigate, isAuthenticated, user, redirect]);
+  }, [dispatch]);
 
   useEffect(() => {
     // Show error toast if login fails
     if (error) {
-      console.error("Login error:", error);
       toast.error(error);
     }
   }, [error]);
 
   useEffect(() => {
     // Show success toast if login succeeds
-    if (success && isAuthenticated) {
-      console.log("Login success!");
+    if (success) {
       toast.success("Admin login successful!");
     }
-  }, [success, isAuthenticated]);
+  }, [success]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -88,20 +62,14 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      {/* Breadcrumb */}
-      <div className="flex items-center text-sm text-gray-500 mb-8">
-        <Link to="/" className="hover:text-southern-green">
-          Home
-        </Link>
-        <ChevronRight className="mx-1" size={16} />
-        <span className="font-medium text-southern-brown">Admin Login</span>
-      </div>
-
-      <div className="max-w-md mx-auto bg-white rounded-southern shadow-md p-8">
+    <div className="min-h-screen bg-southern-cream flex flex-col justify-center items-center p-4">
+      <div className="w-full max-w-md bg-white rounded-southern shadow-md p-8">
         <h1 className="text-3xl font-heading font-bold text-southern-brown mb-6 text-center">
           Admin Login
         </h1>
+        <p className="text-gray-600 mb-6 text-center">
+          Please sign in to access the admin dashboard.
+        </p>
 
         <form onSubmit={handleSubmit}>
           <div className="mb-6">
@@ -178,14 +146,14 @@ const LoginPage = () => {
           </button>
         </form>
 
-        <div className="mt-4 text-center">
-          <p className="text-sm text-gray-500">
-            This login is for store administrators only.
-          </p>
+        <div className="mt-8 text-center">
+          <a href="/" className="text-sm text-southern-green hover:underline">
+            Return to Homepage
+          </a>
         </div>
       </div>
     </div>
   );
 };
 
-export default LoginPage;
+export default AdminLoginForm;

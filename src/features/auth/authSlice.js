@@ -3,55 +3,45 @@ import axios from "axios";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:6041/api";
 
-// Get user from localStorage
+// Get admin from localStorage
 const user = localStorage.getItem("user")
   ? JSON.parse(localStorage.getItem("user"))
   : null;
 const token = localStorage.getItem("token");
 
-// Register user
-export const register = createAsyncThunk(
-  "auth/register",
-  async (userData, { rejectWithValue }) => {
-    try {
-      const response = await axios.post(`${API_URL}/users/register`, userData);
-      if (response.data.success) {
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-        localStorage.setItem("token", response.data.token);
-      }
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Registration failed"
-      );
-    }
-  }
-);
-
-// Login user
+// Login admin
 export const login = createAsyncThunk(
   "auth/login",
   async (userData, { rejectWithValue }) => {
     try {
+      console.log("Attempting admin login with:", userData.email);
       const response = await axios.post(`${API_URL}/users/login`, userData);
-      if (response.data.success) {
+
+      // Verify this is an admin account
+      if (response.data.success && response.data.user.role === "admin") {
         localStorage.setItem("user", JSON.stringify(response.data.user));
         localStorage.setItem("token", response.data.token);
+        return response.data;
+      } else if (response.data.success) {
+        // If login succeeded but user is not admin
+        return rejectWithValue("Access denied. Admin privileges required.");
       }
+
       return response.data;
     } catch (error) {
+      console.error("Login error:", error.response?.data || error.message);
       return rejectWithValue(error.response?.data?.message || "Login failed");
     }
   }
 );
 
-// Logout user
+// Logout admin
 export const logout = createAsyncThunk("auth/logout", async () => {
   localStorage.removeItem("user");
   localStorage.removeItem("token");
 });
 
-// Get user profile
+// Get admin profile
 export const getUserProfile = createAsyncThunk(
   "auth/getUserProfile",
   async (_, { rejectWithValue, getState }) => {
@@ -65,6 +55,12 @@ export const getUserProfile = createAsyncThunk(
       };
 
       const response = await axios.get(`${API_URL}/users/profile`, config);
+
+      // Verify this is still an admin account
+      if (response.data.success && response.data.user.role !== "admin") {
+        return rejectWithValue("Access denied. Admin privileges required.");
+      }
+
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -74,7 +70,7 @@ export const getUserProfile = createAsyncThunk(
   }
 );
 
-// Update user profile
+// Update admin profile
 export const updateUserProfile = createAsyncThunk(
   "auth/updateUserProfile",
   async (userData, { rejectWithValue, getState }) => {
@@ -93,6 +89,11 @@ export const updateUserProfile = createAsyncThunk(
         userData,
         config
       );
+
+      // Verify this is still an admin account
+      if (response.data.success && response.data.user.role !== "admin") {
+        return rejectWithValue("Access denied. Admin privileges required.");
+      }
 
       if (response.data.success) {
         localStorage.setItem("user", JSON.stringify(response.data.user));
@@ -113,7 +114,8 @@ export const updateUserProfile = createAsyncThunk(
 const initialState = {
   user: user || null,
   token: token || null,
-  isAuthenticated: !!token,
+  isAuthenticated: !!token && !!user && user.role === "admin",
+  isAdmin: !!user && user.role === "admin",
   loading: false,
   error: null,
   success: false,
@@ -126,27 +128,11 @@ const authSlice = createSlice({
     resetAuthStatus: (state) => {
       state.error = null;
       state.success = false;
+      state.loading = false;
     },
   },
   extraReducers: (builder) => {
     builder
-      // Register
-      .addCase(register.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(register.fulfilled, (state, action) => {
-        state.loading = false;
-        state.isAuthenticated = true;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-        state.success = true;
-      })
-      .addCase(register.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
       // Login
       .addCase(login.pending, (state) => {
         state.loading = true;
@@ -155,9 +141,11 @@ const authSlice = createSlice({
       .addCase(login.fulfilled, (state, action) => {
         state.loading = false;
         state.isAuthenticated = true;
+        state.isAdmin = action.payload.user.role === "admin";
         state.user = action.payload.user;
         state.token = action.payload.token;
         state.success = true;
+        state.error = null;
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
@@ -169,6 +157,7 @@ const authSlice = createSlice({
         state.user = null;
         state.token = null;
         state.isAuthenticated = false;
+        state.isAdmin = false;
         state.loading = false;
       })
 
@@ -179,6 +168,7 @@ const authSlice = createSlice({
       .addCase(getUserProfile.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload.user;
+        state.isAdmin = action.payload.user.role === "admin";
       })
       .addCase(getUserProfile.rejected, (state, action) => {
         state.loading = false;
@@ -192,6 +182,7 @@ const authSlice = createSlice({
       .addCase(updateUserProfile.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload.user;
+        state.isAdmin = action.payload.user.role === "admin";
         if (action.payload.token) {
           state.token = action.payload.token;
         }
